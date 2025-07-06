@@ -3,28 +3,30 @@ package system;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Scanner;
 
 import account.Account;
-import account.IAccountService;
+import account.Manager;
 import account.User;
+import payment.AbstractPayment;
 import payment.IPayment;
 import reservation.Reservation;
+import service.IAccountService;
 import service.IReservationService;
 import service.IVehicleManagementService;
 import service.PaymentService;
 import vehicle.AbstractVehicle;
-import vehicle.IVehicle;
+import vehicle.Car;
+import vehicle.Motorcycle;
 
 public class RentalSystem {
 
     private IAccountService accountService;
     private IReservationService reservationService;
     private PaymentService paymentService;
+    private IVehicleManagementService vehicleManager;
 
     private Account currentAccount;
     private int state = 0; // 未ログイン状態
@@ -40,7 +42,7 @@ public class RentalSystem {
         this.accountService = accountService;
         this.reservationService = reservationService;
         this.paymentService = paymentService;
-    }
+        this.vehicleManager = vehicleManager;    }
 
     public void run() {
         char choose;
@@ -180,62 +182,111 @@ public class RentalSystem {
     }
 
     public void handlePaymentProcess() {
-        // 仮：直近の予約を取得（本来は選ばせる）
-        Reservation reservation = getLatestUnpaidReservationForCurrentUser();
-        if (reservation == null) {
-            System.out.println("未払いの予約が見つかりません。");
+        if (!(currentAccount instanceof User user)) {
+            System.out.println("ユーザーとしてログインしてください。");
             return;
         }
 
-        System.out.print("支払い方法を選んでください（1:credit, 2:cash, 3:convenience）: ");
-        String methodType = scan.nextLine();
-
-        Map<String, Object> options = new HashMap<>();
-        if (methodType.equals("1")) {
-            System.out.print("カード番号: ");
-            options.put("cardNumber", scan.nextLine());
-            System.out.print("有効期限: ");
-            options.put("expirationDate", scan.nextLine());
-        } else if (methodType.equals("3")) {
-            options.put("paymentCode", "XYZ123");
+        Reservation unpaid = reservationService.getLatestUnpaidReservationForCurrentUser();
+        if (unpaid == null) {
+            System.out.println("未払いの予約はありません。");
+            return;
         }
 
-        
-        
-        reservation.showReservation();
-        System.out.println("上記の内容でよろしいですか？　１：yes 2: no");
-     
-        
-        int  a = scan.nextInt();
-        if(a==1) {
-        	IPayment payment = paymentService.createPayment(methodType, reservation.getPrice(), options);
+        int amount = unpaid.getPrice();
+        IPayment payment = paymentService.createPaymentFromUserInput(scan, amount);
+        if (payment == null) return;
+
+        try {
             paymentService.processPayment(payment);
-            reservation.setPayment(payment);
-        	System.out.println("支払いが完了しました。");
-        }else {
-        	handlePaymentProcess();
+            if (payment instanceof AbstractPayment ap && !ap.isPaid()) {
+                System.out.println("支払いが完了しませんでした。");
+                return;
+            }
+
+            unpaid.setPayment(payment);
+            payment.makeReceipt();
+            System.out.println("支払いが完了しました。金額: " + amount + " 円");
+
+        } catch (Exception e) {
+            System.out.println("支払い中にエラーが発生しました: " + e.getMessage());
         }
-        
-        
     }
-    
-    public Reservation getLatestUnpaidReservationForCurrentUser() {
-        if (currentAccount instanceof User user) {
-            List<Reservation> history = user.getReservationHistory();
-            for (int i = history.size() - 1; i >= 0; i--) {
-                Reservation r = history.get(i);
-                if (!r.isReturned() && r.getPayment() == null) {
-                    return r;
+
+
+
+
+    public void handleRegisterVehicle() {
+        if (!(currentAccount instanceof Manager manager)) {
+            System.out.println("この操作は管理者のみ可能です。");
+            return;
+        }
+
+        System.out.println("登録する車両の種類を選択してください:");
+        System.out.println("1. 車 (Car)");
+        System.out.println("2. バイク (Motorcycle)");
+        System.out.print("番号を入力: ");
+        int type;
+        try {
+            type = Integer.parseInt(scan.nextLine());
+        } catch (NumberFormatException e) {
+            System.out.println("数字を入力してください。");
+            return;
+        }
+
+        System.out.print("車両ID（整数）を入力してください: ");
+        int id;
+        try {
+            id = Integer.parseInt(scan.nextLine());
+        } catch (NumberFormatException e) {
+            System.out.println("IDは整数で入力してください。");
+            return;
+        }
+
+        System.out.print("車両名を入力してください: ");
+        String name = scan.nextLine();
+
+        System.out.print("レンタル価格（1日あたり）を入力してください: ");
+        int price;
+        try {
+            price = Integer.parseInt(scan.nextLine());
+        } catch (NumberFormatException e) {
+            System.out.println("価格は整数で入力してください。");
+            return;
+        }
+
+        AbstractVehicle vehicle = null;
+        switch (type) {
+            case 1 -> {
+                System.out.print("マニュアル車ですか？（true / false）: ");
+                boolean isManual = Boolean.parseBoolean(scan.nextLine());
+                vehicle = new Car(name,true, price, isManual);
+            }
+            case 2 -> {
+                System.out.print("排気量を入力してください（cc）: ");
+                int displacement;
+                try {
+                    displacement = Integer.parseInt(scan.nextLine());
+                } catch (NumberFormatException e) {
+                    System.out.println("排気量は整数で入力してください。");
+                    return;
                 }
+                vehicle = new Motorcycle(name,true, price, displacement);
+            }
+            default -> {
+                System.out.println("不正な選択肢です。");
+                return;
             }
         }
-        return null;
+
+        try {
+        	vehicleManager.registerVehicle(manager, vehicle);
+            System.out.println("車両を登録しました。");
+        } catch (Exception e) {
+            System.out.println("車両登録に失敗しました: " + e.getMessage());
+        }
     }
 
-
-    public void handleRegisterVehicle(IVehicle vehicle) {
-
-    }
 
     public void handleRegisterAsUser() {
         // 未実装

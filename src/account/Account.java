@@ -1,21 +1,25 @@
 package account;
 
-public abstract class Account {//アカウント情報はaccountServiceが保持
+public abstract class Account {
     protected String accountId;
     protected String email;
     protected String password;
-    Account(String accountId,String email,String password){
-    	this.accountId=accountId;
-    	this.email=email;
-    	this.password=password;
+
+    public Account(String id, String email, String password) {
+        this.accountId = id;
+        this.email = email;
+        this.password = password;
     }
-	public Object getEmail() {
-		return email;
-	}
-	public Object getPassword() {
-		return password;
-	}
-	public Object getID(){
-		return accountId;
-	}
+
+    public String getID() {
+        return accountId;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
 }

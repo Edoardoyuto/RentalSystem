@@ -3,20 +3,25 @@ package payment;
 import java.util.Date;
 
 public class CreditCardPayment extends AbstractPayment {
-    public CreditCardPayment(int amount, Date date) {
-		super(amount, date);
-		// TODO 自動生成されたコンストラクター・スタブ
-	}
+    private String cardNumber;
+    private String expirationDate;
+    private String approvalCode;
 
-	String cardNumber;
-    String expirationDate;
-    String approvalCode;
-
-    public void pay() {
-        // クレジットカード支払い処理
+    public CreditCardPayment(int amount, Date date, String cardNumber, String expirationDate, String approvalCode) {
+        super(amount, date);
+        this.cardNumber = cardNumber;
+        this.expirationDate = expirationDate;
+        this.approvalCode = approvalCode;
     }
 
+    @Override
+    public void pay() {
+        this.paid = true;
+        System.out.println("クレジットカードで支払いました。");
+    }
+
+    @Override
     public String getMethodName() {
-        return "CreditCard";
+        return "Credit Card";
     }
 }

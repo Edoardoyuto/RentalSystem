@@ -1,8 +1,8 @@
 package system;
 
-import account.IAccountService;
 import account.Manager;
 import service.AccountService;
+import service.IAccountService;
 import service.IReservationService;
 import service.IVehicleManagementService;
 import service.PaymentService;
@@ -34,7 +34,7 @@ public class Main {
 
         // 車両の登録（マネージャーとして）
         Manager manager = new Manager("admin", "admin@example.com", "adminpass", "Admin");
-        AbstractVehicle car = new Car(1, "Toyota", true, 5000, false);
+        AbstractVehicle car = new Car( "Toyota", true, 5000, false);
         vehicleManager.registerVehicle(manager, car);
         
         rentalSystem.run();

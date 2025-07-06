@@ -6,20 +6,24 @@ import java.util.List;
 import reservation.Reservation;
 
 public class User extends Account {
-    public String username;
+    private String username;
     private List<Reservation> reservationHistory;
 
-    public User(String accountId, String email, String password, String name) {
-        super(accountId, email, password);
-        this.username = name;
+    public User(String id, String email, String password, String username) {
+        super(id, email, password);
+        this.username = username;
         this.reservationHistory = new ArrayList<>();
     }
 
-    public void add(Reservation reservation) {
-        reservationHistory.add(reservation);
+    public String getUsername() {
+        return username;
     }
 
     public List<Reservation> getReservationHistory() {
         return reservationHistory;
+    }
+
+    public void addReservation(Reservation reservation) {
+        reservationHistory.add(reservation);
     }
 }

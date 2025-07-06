@@ -1,8 +1,8 @@
 package vehicle;
 
 public class Motorcycle extends AbstractVehicle {
-    public Motorcycle(int id, String name, boolean isAvailable, int rentalPrice,int displacement) {
-		super(id, name, isAvailable, rentalPrice);
+    public Motorcycle(String name, boolean isAvailable, int rentalPrice,int displacement) {
+		super(name, isAvailable, rentalPrice);
 		this.displacement=displacement;
 	}
 

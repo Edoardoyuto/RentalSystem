@@ -50,4 +50,11 @@ public class ReservationService implements IReservationService {
     public void returnVehicle(int reservationId) {
         // TODO: Reservation リストから検索して isReturned=true にする
     }
+
+
+	@Override
+	public Reservation getLatestUnpaidReservationForCurrentUser() {
+		// TODO 自動生成されたメソッド・スタブ
+		return null;
+	}
 }

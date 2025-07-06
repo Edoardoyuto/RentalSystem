@@ -2,15 +2,17 @@ package vehicle;
 
 public abstract class AbstractVehicle implements IVehicle {
     protected int id;
+    static int vheicleNumber = 0;
     protected String name;
     protected boolean isAvailable;
     protected int rentalPrice;
     
-    AbstractVehicle(int id,String name,boolean isAvailable,int rentalPrice){
-    	this.id=id;
+    AbstractVehicle(String name,boolean isAvailable,int rentalPrice){
+    	this.id=vheicleNumber;
     	this.name=name;
     	this.isAvailable=isAvailable;
     	this.rentalPrice=rentalPrice;
+    	vheicleNumber++;
     }
   
 	public int getId() { return id; }
