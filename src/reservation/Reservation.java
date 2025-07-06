@@ -26,12 +26,6 @@ public class Reservation {
 		
 	}
 
-	
-	public int getDuration() {
-        long diff = endDate.getTime() - startDate.getTime();
-        return (int)(diff / (1000 * 60 * 60 * 24));
-    }
-	
 	public int getPrice() {
 		return price;
 	}
@@ -60,5 +54,20 @@ public class Reservation {
 		System.out.println("期間"+startDate+"～"+endDate);
 		System.out.print("値段："+price);
 		System.out.println("_____________");
+	}
+
+
+	public IVehicle getVehicle() {
+		return vehicle;
+	}
+
+
+	public Object getStartDate() {
+		return startDate;
+	}
+
+
+	public Object getEndDate() {
+		return endDate;
 	}
 }

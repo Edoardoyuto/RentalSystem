@@ -77,7 +77,7 @@ public class RentalSystem {
                         } else if (choose == 'R' || choose == 'r') {
                             handleMakeReservation();
                         } else if (choose == 'S' || choose == 's') {
-                            // 履歴機能（未実装）
+                            handleShowHistory();
                         } else {
                             System.out.println("press L or R or S ");
                         }
@@ -286,6 +286,44 @@ public class RentalSystem {
             System.out.println("車両登録に失敗しました: " + e.getMessage());
         }
     }
+    
+    public void handleShowHistory() {
+        if (!(currentAccount instanceof User user)) {
+            System.out.println("この機能はユーザーのみ利用可能です。");
+            return;
+        }
+
+        List<Reservation> history = user.getReservationHistory();
+        if (history.isEmpty()) {
+            System.out.println("予約履歴はありません。");
+            return;
+        }
+
+        System.out.println("=== 予約履歴 ===");
+        int index = 1;
+        for (Reservation r : history) {
+            System.out.printf("[%d] 車両ID: %d, 開始日: %s, 終了日: %s, 金額: %d円, 状態: %s\n",
+                index++,
+                r.getVehicle().getId(),
+                r.getStartDate(),
+                r.getEndDate(),
+                r.getPrice(),
+                formatReservationStatus(r)
+            );
+        }
+        System.out.println("===============\n");
+    }
+    
+    private String formatReservationStatus(Reservation r) {
+        if (r.isReturned()) {
+            return "返却済み";
+        } else if (r.getPayment() == null) {
+            return "未払い";
+        } else {
+            return "支払い済み／未返却";
+        }
+    }
+
 
 
     public void handleRegisterAsUser() {
