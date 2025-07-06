@@ -9,7 +9,7 @@ import vehicle.IVehicle;
 
 public class Reservation {
     public int reservationId;
-    public Account accout;
+    public Account account;
     public IVehicle vehicle;
     public Date startDate;
     public Date endDate;
@@ -19,6 +19,10 @@ public class Reservation {
 
     public Reservation(Account account, AbstractVehicle vehicle, Date start, Date end, int price) {
 		this.account = account;
+		this.vehicle = vehicle;
+		this.startDate = start;
+		this.endDate = end;
+		this.price = price;
 		
 	}
 
