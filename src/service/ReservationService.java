@@ -10,8 +10,8 @@ import vehicle.AbstractVehicle;
 public class ReservationService implements IReservationService {
 
     private PricingCalculator pricingCalculator;
-    private IVehicleManagementService vehicleManager; // ← 追加！
-
+    private IVehicleManagementService vehicleManager; 
+    
     public ReservationService(PricingCalculator pricingCalculator, IVehicleManagementService vehicleManager) {
         this.pricingCalculator = pricingCalculator;
         this.vehicleManager = vehicleManager;

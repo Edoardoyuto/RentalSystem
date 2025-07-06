@@ -200,15 +200,17 @@ public class RentalSystem {
             options.put("paymentCode", "XYZ123");
         }
 
-        IPayment payment = paymentService.createPayment(methodType, reservation.getPrice(), options);
-        paymentService.processPayment(payment);
-
-        reservation.setPayment(payment);
-        System.out.println("以下の内容でよろしいですか？　１：yes 2: no");
+        
+        
         reservation.showReservation();
+        System.out.println("上記の内容でよろしいですか？　１：yes 2: no");
+     
         
         int  a = scan.nextInt();
         if(a==1) {
+        	IPayment payment = paymentService.createPayment(methodType, reservation.getPrice(), options);
+            paymentService.processPayment(payment);
+            reservation.setPayment(payment);
         	System.out.println("支払いが完了しました。");
         }else {
         	handlePaymentProcess();

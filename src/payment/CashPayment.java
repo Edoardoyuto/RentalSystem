@@ -8,8 +8,9 @@ public class CashPayment extends AbstractPayment {
 		// TODO 自動生成されたコンストラクター・スタブ
 	}
 
-	public void pay() {
-        // 現金支払い処理
+    public void pay() {
+        System.out.println("現金で " + amount + " 円を支払いました。");
+        this.date = new Date(); // 支払日を現在に
     }
 
     public String getMethodName() {
