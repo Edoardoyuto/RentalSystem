@@ -5,14 +5,34 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Scanner;
 
+import account.User;
+import payment.AbstractPayment;
 import payment.CashPayment;
 import payment.ConvenienceStorePayment;
 import payment.CreditCardPayment;
 import payment.IPayment;
+import reservation.Reservation;
 
 public class PaymentService {
     public void processPayment(IPayment payment) {
         payment.pay();
+    }
+
+    public boolean executePayment(User user, Reservation reservation, Scanner scan) {
+        int amount = reservation.getPrice();
+        IPayment payment = createPaymentFromUserInput(scan, amount);
+        if (payment == null) return false;
+
+        processPayment(payment);
+        if (payment instanceof AbstractPayment ap && !ap.isPaid()) {
+            System.out.println("支払いが完了しませんでした。");
+            return false;
+        }
+
+        reservation.setPayment(payment);
+        payment.makeReceipt();
+        System.out.println("支払いが完了しました。予約が確定しました！ 金額: " + amount + " 円");
+        return true;
     }
 
     public IPayment createPaymentFromUserInput(Scanner scanner, int amount) {

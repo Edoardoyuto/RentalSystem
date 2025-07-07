@@ -8,11 +8,15 @@ import reservation.Reservation;
 public class User extends Account {
     private String username;
     private List<Reservation> reservationHistory;
+    private String id;
+    private static int userCount = 1;
 
-    public User(String id, String email, String password, String username) {
-        super(id, email, password);
+    public User(String email, String password, String username) {
+        super("User" + userCount, email, password);
+        this.id = "User" + userCount;
         this.username = username;
         this.reservationHistory = new ArrayList<>();
+        userCount++;
     }
 
     public String getUsername() {
@@ -25,5 +29,9 @@ public class User extends Account {
 
     public void addReservation(Reservation reservation) {
         reservationHistory.add(reservation);
+    }
+
+    public String getID() {
+        return id;
     }
 }

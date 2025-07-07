@@ -1,6 +1,5 @@
 package system;
 
-import account.Manager;
 import service.AccountService;
 import service.IAccountService;
 import service.IReservationService;
@@ -11,6 +10,7 @@ import service.ReservationService;
 import service.VehicleManager;
 import vehicle.AbstractVehicle;
 import vehicle.Car;
+import vehicle.Motorcycle;
 
 public class Main {
     public static void main(String[] args) {
@@ -27,15 +27,21 @@ public class Main {
             accountService, reservationService, vehicleManager, paymentService
         );
 
-        // アカウントの登録とログイン
+        // アカウントの登録
 
-        ((AccountService) accountService).register("user1", "user1@example.com", "pass","username");
+        ((AccountService) accountService).register( "user1@example.com", "pass","username");
+        ((AccountService) accountService).registerManager("manager@example.com", "pass", "ManagerName");
+
+
+     
         
-
-        // 車両の登録（マネージャーとして）
-        Manager manager = new Manager("admin", "admin@example.com", "adminpass", "Admin");
-        AbstractVehicle car = new Car( "Toyota", true, 5000, false);
-        vehicleManager.registerVehicle(manager, car);
+        AbstractVehicle car1 = new Car( "Toyota", true, 2000, false);
+        AbstractVehicle car2 = new Car( "Matuda", true, 3000, false);
+        AbstractVehicle bike1 = new Motorcycle( "Honda", true, 4000, 250);
+        
+        vehicleManager.registerVehicle(car1);
+        vehicleManager.registerVehicle(car2);
+        vehicleManager.registerVehicle(bike1);
         
         rentalSystem.run();
 

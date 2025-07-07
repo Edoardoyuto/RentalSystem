@@ -2,6 +2,9 @@ package payment;
 
 import java.util.Date;
 
+import receipt.IReceipt;
+import receipt.Receipt;
+
 public abstract class AbstractPayment implements IPayment {
     protected int amount;
     protected Date date;
@@ -12,14 +15,24 @@ public abstract class AbstractPayment implements IPayment {
         this.date = date;
     }
 
-    public int getAmount() { return amount; }
-    public Date getDate() { return date; }
-    public boolean isPaid() { return paid; }
+    @Override
+    public int getAmount() {
+        return amount;
+    }
 
+    @Override
+    public Date getDate() {
+        return date;
+    }
+
+    @Override
+    public boolean isPaid() {
+        return paid;
+    }
+
+    @Override
     public void makeReceipt() {
-        System.out.println("--- Receipt ---");
-        System.out.println("Payment Method: " + getMethodName());
-        System.out.println("Amount: " + amount);
-        System.out.println("Date: " + date);
+        IReceipt receipt = new Receipt(this); // Receipt に委譲
+        receipt.makeReceipt();
     }
 }

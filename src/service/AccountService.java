@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import account.Account;
+import account.Manager;
 import account.User;
 
 public class AccountService implements IAccountService {
@@ -16,22 +17,25 @@ public class AccountService implements IAccountService {
 
     @Override
     public Optional<Account> login(String email, String password) {
-        for (Account account : accounts) {
-            if (account.getEmail().equals(email) && account.getPassword().equals(password)) {
-                return Optional.of(account);
-            }
-        }
-        return Optional.empty();
+        return accounts.stream()
+                .filter(a -> a.getEmail().equals(email) && a.getPassword().equals(password))
+                .findFirst();
     }
 
     @Override
     public void logout(Account account) {
-        // ログアウト処理が必要ならここに記述
+        System.out.println(account.getEmail() + " さんがログアウトしました。");
     }
 
     @Override
-    public void register(String id, String email, String password, String username) {
-        User user = new User(id, email, password, username);
+    public void register(String email, String password, String username) {
+        User user = new User(email, password, username);
         accounts.add(user);
     }
+    
+    public void registerManager(String email, String password, String name) {
+        Manager manager = new Manager(email, password, name);
+        accounts.add(manager);
+    }
+
 }

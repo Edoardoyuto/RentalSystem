@@ -1,4 +1,5 @@
 package payment;
+
 import java.util.Date;
 
 public class ConvenienceStorePayment extends AbstractPayment {
@@ -13,12 +14,12 @@ public class ConvenienceStorePayment extends AbstractPayment {
 
     @Override
     public void pay() {
-        this.paid = true;
-        System.out.println("コンビニ支払いで支払いました。");
+        System.out.println("コンビニで支払いました。");
+        paid = true;
     }
 
     @Override
     public String getMethodName() {
-        return "Convenience Store";
+        return "コンビニ支払い";
     }
 }

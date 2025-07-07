@@ -1,336 +1,127 @@
 package system;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 
 import account.Account;
 import account.Manager;
 import account.User;
-import payment.AbstractPayment;
-import payment.IPayment;
 import reservation.Reservation;
 import service.IAccountService;
 import service.IReservationService;
 import service.IVehicleManagementService;
 import service.PaymentService;
-import vehicle.AbstractVehicle;
-import vehicle.Car;
-import vehicle.Motorcycle;
 
 public class RentalSystem {
 
-    private IAccountService accountService;
-    private IReservationService reservationService;
-    private PaymentService paymentService;
-    private IVehicleManagementService vehicleManager;
+    private final IAccountService accountService;
+    private final IReservationService reservationService;
+    private final IVehicleManagementService vehicleManager;
+    private final PaymentService paymentService;
 
     private Account currentAccount;
-    private int state = 0; // 未ログイン状態
+    private final Scanner scan = new Scanner(System.in);
 
-    private Scanner scan = new Scanner(System.in);
-
-    public RentalSystem(
-        IAccountService accountService,
-        IReservationService reservationService,
-        IVehicleManagementService vehicleManager,
-        PaymentService paymentService
-    ) {
+    public RentalSystem(IAccountService accountService,
+                        IReservationService reservationService,
+                        IVehicleManagementService vehicleManager,
+                        PaymentService paymentService) {
         this.accountService = accountService;
         this.reservationService = reservationService;
+        this.vehicleManager = vehicleManager;
         this.paymentService = paymentService;
-        this.vehicleManager = vehicleManager;    }
+    }
 
     public void run() {
-        char choose;
-
         while (true) {
-            switch (state) {
-                case 0:
-                    System.out.println("login( L ) or Register ( R )?:");
-                    String input0 = scan.nextLine();
-                    if (input0.length() > 0) {
-                        choose = input0.charAt(0);
-                        if (choose == 'L' || choose == 'l') {
-                            login();
-                        } else if (choose == 'R' || choose == 'r') {
-                            handleRegisterAsUser();
-                        } else {
-                            System.out.println("press L or R");
-                        }
-                    }else {
-                        System.out.println("入力が空です。もう一度入力してください。");
-                    }
-                    break;
-
-                case 1:
-                    System.out.println("\nログイン中のアカウント: " + currentAccount.getID());
-                    System.out.print("Logout( L ) or Rent a vehicle( R ) or See History( S ): ");
-                    String input1 = scan.nextLine();
-                    if (input1.length() > 0) {
-                        choose = input1.charAt(0);
-                        if (choose == 'L' || choose == 'l') {
-                            logout();
-                        } else if (choose == 'R' || choose == 'r') {
-                            handleMakeReservation();
-                        } else if (choose == 'S' || choose == 's') {
-                            handleShowHistory();
-                        } else {
-                            System.out.println("press L or R or S ");
-                        }
-                    } else {
-                        System.out.println("入力が空です。もう一度入力してください。");
-                    }
-                    break;
+            System.out.println("login( L ) or Register ( R )?:");
+            String input = scan.nextLine().trim();
+            if (input.equalsIgnoreCase("L")) {
+                login();
+            } else if (input.equalsIgnoreCase("R")) {
+                handleRegisterAsUser();
+            } else {
+                System.out.println("press L or R");
             }
         }
     }
 
-    public boolean login() {
+    private void login() {
         System.out.print("e-mail を入力してください: ");
         String email = scan.nextLine();
-
         System.out.print("パスワード を入力してください: ");
         String password = scan.nextLine();
-        System.out.println();
 
         Optional<Account> result = accountService.login(email, password);
         if (result.isPresent()) {
-            System.out.println("ログインに成功しました。\n________");
             currentAccount = result.get();
-            state = 1;
-            return true;
+            System.out.println("ログインに成功しました。");
+
+            if (currentAccount instanceof User user) {
+                runUserMenu(user);
+            } else if (currentAccount instanceof Manager manager) {
+                runManagerMenu(manager);
+            }
         } else {
             System.out.println("ログインに失敗しました。");
-            return false;
         }
     }
 
-    public void logout() {
-        if (currentAccount != null) {
-            System.out.println(currentAccount.getEmail() + " さんがログアウトしました。\n________");
-            accountService.logout(currentAccount);
-            currentAccount = null;
-            state = 0;
-        } else {
-            System.out.println("現在ログインしているアカウントはありません。\n________");
-        }
-    }
-
-    public void handleMakeReservation() {
-        System.out.println("以下のうち、レンタルする車のIDを入力してください");
-
-        List<AbstractVehicle> availableVehicles = reservationService.getAvailableVehicles();
-        for (AbstractVehicle vehicle : availableVehicles) {
-            System.out.println(vehicle.getDisplayInfo());
-        }
-
-        int vehicleId = -1;
-
+    private void runUserMenu(User user) {
         while (true) {
-            try {
-                String idInput = scan.nextLine();
-                vehicleId = Integer.parseInt(idInput);
-                boolean found = false;
-                for (AbstractVehicle v : availableVehicles) {
-                    if (v.getId() == vehicleId) {
-                        found = true;
-                        break;
+            System.out.println("\nログイン中のユーザー: " + user.getID());
+            System.out.print("Logout( L ) or Rent( R ) or Return( B ) or History( S ): ");
+            String input = scan.nextLine().trim();
+            switch (input.toLowerCase()) {
+                case "l" -> { logout(); return; }
+                case "r" -> {
+                    Reservation reservation = reservationService.makeReservation(user, scan);
+                    if (reservation != null) {
+                        boolean paid = paymentService.executePayment(user, reservation, scan);
+                        if (!paid) reservationService.cancelReservation(user, reservation);
                     }
                 }
-                if (found) break;
-                else System.out.println("有効なIDを入力してください");
-
-            } catch (NumberFormatException e) {
-                System.out.println("数字でIDを入力してください");
+                case "b" -> reservationService.returnVehicle(user, scan);
+                case "s" -> reservationService.showHistory(user);
+                default -> System.out.println("press L, R, B, or S");
             }
-        }
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        Date startDate, endDate;
-
-        try {
-            System.out.print("貸出日を入力してください (例: 2025-07-05): ");
-            startDate = dateFormat.parse(scan.nextLine());
-
-            System.out.print("返却日を入力してください (例: 2025-07-10): ");
-            endDate = dateFormat.parse(scan.nextLine());
-
-            if (startDate.after(endDate)) {
-                System.out.println("返却日は貸出日より後にしてください。");
-                return;
-            }
-        } catch (ParseException e) {
-            System.out.println("日付の形式が正しくありません。yyyy-MM-dd の形式で入力してください。");
-            return;
-        }
-
-        if (currentAccount instanceof User user) {
-            try {
-                reservationService.reserveVehicle(user, vehicleId, startDate, endDate);
-                System.out.println("予約が完了しました！");
-                handlePaymentProcess();
-            } catch (Exception e) {
-                System.out.println("予約中にエラーが発生しました: " + e.getMessage());
-            }
-        } else {
-            System.out.println("予約はユーザーアカウントでのみ可能です。");
         }
     }
 
-    public void handlePaymentProcess() {
-        if (!(currentAccount instanceof User user)) {
-            System.out.println("ユーザーとしてログインしてください。");
-            return;
-        }
-
-        Reservation unpaid = reservationService.getLatestUnpaidReservationForCurrentUser();
-        if (unpaid == null) {
-            System.out.println("未払いの予約はありません。");
-            return;
-        }
-
-        int amount = unpaid.getPrice();
-        IPayment payment = paymentService.createPaymentFromUserInput(scan, amount);
-        if (payment == null) return;
-
-        try {
-            paymentService.processPayment(payment);
-            if (payment instanceof AbstractPayment ap && !ap.isPaid()) {
-                System.out.println("支払いが完了しませんでした。");
-                return;
+    private void runManagerMenu(Manager manager) {
+        while (true) {
+            System.out.println("\nログイン中のマネージャー: " + manager.getID());
+            System.out.print("Logout(L) / Register(R) / Change(C) / Remove(D) / Price(P): ");
+            switch (scan.nextLine()) {
+                case "l" -> { logout(); return; }
+                case "r" -> vehicleManager.registerVehicleWithInput(manager, scan);
+                case "c" -> vehicleManager.changeAvailabilityWithInput(manager, scan);
+                case "d" -> vehicleManager.removeVehicleWithInput(manager, scan);
+                case "p" -> vehicleManager.updateRentalPriceWithInput(manager, scan);
+                default -> System.out.println("press L, R, C, D, or P");
             }
 
-            unpaid.setPayment(payment);
-            payment.makeReceipt();
-            System.out.println("支払いが完了しました。金額: " + amount + " 円");
 
-        } catch (Exception e) {
-            System.out.println("支払い中にエラーが発生しました: " + e.getMessage());
         }
     }
 
-
-
-
-    public void handleRegisterVehicle() {
-        if (!(currentAccount instanceof Manager manager)) {
-            System.out.println("この操作は管理者のみ可能です。");
-            return;
+    private void logout() {
+        if (currentAccount != null) {
+            accountService.logout(currentAccount);
+            currentAccount = null;
         }
+    }
 
-        System.out.println("登録する車両の種類を選択してください:");
-        System.out.println("1. 車 (Car)");
-        System.out.println("2. バイク (Motorcycle)");
-        System.out.print("番号を入力: ");
-        int type;
-        try {
-            type = Integer.parseInt(scan.nextLine());
-        } catch (NumberFormatException e) {
-            System.out.println("数字を入力してください。");
-            return;
-        }
+    private void handleRegisterAsUser() {
 
-        System.out.print("車両ID（整数）を入力してください: ");
-        int id;
-        try {
-            id = Integer.parseInt(scan.nextLine());
-        } catch (NumberFormatException e) {
-            System.out.println("IDは整数で入力してください。");
-            return;
-        }
-
-        System.out.print("車両名を入力してください: ");
+        System.out.print("メール: ");
+        String email = scan.nextLine();
+        System.out.print("パスワード: ");
+        String pw = scan.nextLine();
+        System.out.print("ユーザー名: ");
         String name = scan.nextLine();
 
-        System.out.print("レンタル価格（1日あたり）を入力してください: ");
-        int price;
-        try {
-            price = Integer.parseInt(scan.nextLine());
-        } catch (NumberFormatException e) {
-            System.out.println("価格は整数で入力してください。");
-            return;
-        }
-
-        AbstractVehicle vehicle = null;
-        switch (type) {
-            case 1 -> {
-                System.out.print("マニュアル車ですか？（true / false）: ");
-                boolean isManual = Boolean.parseBoolean(scan.nextLine());
-                vehicle = new Car(name,true, price, isManual);
-            }
-            case 2 -> {
-                System.out.print("排気量を入力してください（cc）: ");
-                int displacement;
-                try {
-                    displacement = Integer.parseInt(scan.nextLine());
-                } catch (NumberFormatException e) {
-                    System.out.println("排気量は整数で入力してください。");
-                    return;
-                }
-                vehicle = new Motorcycle(name,true, price, displacement);
-            }
-            default -> {
-                System.out.println("不正な選択肢です。");
-                return;
-            }
-        }
-
-        try {
-        	vehicleManager.registerVehicle(manager, vehicle);
-            System.out.println("車両を登録しました。");
-        } catch (Exception e) {
-            System.out.println("車両登録に失敗しました: " + e.getMessage());
-        }
-    }
-    
-    public void handleShowHistory() {
-        if (!(currentAccount instanceof User user)) {
-            System.out.println("この機能はユーザーのみ利用可能です。");
-            return;
-        }
-
-        List<Reservation> history = user.getReservationHistory();
-        if (history.isEmpty()) {
-            System.out.println("予約履歴はありません。");
-            return;
-        }
-
-        System.out.println("=== 予約履歴 ===");
-        int index = 1;
-        for (Reservation r : history) {
-            System.out.printf("[%d] 車両ID: %d, 開始日: %s, 終了日: %s, 金額: %d円, 状態: %s\n",
-                index++,
-                r.getVehicle().getId(),
-                r.getStartDate(),
-                r.getEndDate(),
-                r.getPrice(),
-                formatReservationStatus(r)
-            );
-        }
-        System.out.println("===============\n");
-    }
-    
-    private String formatReservationStatus(Reservation r) {
-        if (r.isReturned()) {
-            return "返却済み";
-        } else if (r.getPayment() == null) {
-            return "未払い";
-        } else {
-            return "支払い済み／未返却";
-        }
-    }
-
-
-
-    public void handleRegisterAsUser() {
-        // 未実装
-    }
-
-    public void handleRegisterAsManager() {
-        // 未実装
+        accountService.register(email, pw, name);
+        System.out.println("登録が完了しました。ログインしてください。");
     }
 }

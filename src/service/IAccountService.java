@@ -7,5 +7,5 @@ import account.Account;
 public interface IAccountService {
     Optional<Account> login(String email, String password);
     void logout(Account account);
-    void register(String id, String email, String password, String username);
+    void register(String email, String password, String username);
 }

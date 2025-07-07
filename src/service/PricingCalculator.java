@@ -1,12 +1,13 @@
 package service;
 
-import vehicle.AbstractVehicle;
 import java.util.Date;
+
+import vehicle.AbstractVehicle;
 
 public class PricingCalculator {
     public int calcPrice(AbstractVehicle vehicle, Date start, Date end) {
-        long diff = end.getTime() - start.getTime();
-        int days = (int)(diff / (1000 * 60 * 60 * 24));
-        return vehicle.getRentalPrice() * Math.max(days, 1);
+        long duration = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+        duration = Math.max(1, duration); // 最低1日料金
+        return (int) duration * vehicle.getRentalPrice();
     }
 }

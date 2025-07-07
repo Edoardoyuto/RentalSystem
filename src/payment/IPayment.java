@@ -1,9 +1,12 @@
 package payment;
 
+import java.util.Date;
+
 public interface IPayment {
     void pay();
     String getMethodName();
     int getAmount();
-    java.util.Date getDate();
+    Date getDate();
+    boolean isPaid();
     void makeReceipt();
 }

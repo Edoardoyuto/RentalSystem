@@ -16,12 +16,12 @@ public class CreditCardPayment extends AbstractPayment {
 
     @Override
     public void pay() {
-        this.paid = true;
         System.out.println("クレジットカードで支払いました。");
+        paid = true;
     }
 
     @Override
     public String getMethodName() {
-        return "Credit Card";
+        return "クレジットカード";
     }
 }
