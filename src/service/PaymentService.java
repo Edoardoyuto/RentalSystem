@@ -13,12 +13,14 @@ import payment.CreditCardPayment;
 import payment.IPayment;
 import reservation.Reservation;
 
-public class PaymentService {
-    public void processPayment(IPayment payment) {
-        payment.pay();
-    }
-
-    public boolean executePayment(User user, Reservation reservation, Scanner scan) {
+// IPaymentServiceインターフェースを実装
+public class PaymentService implements IPaymentService { 
+    
+   
+    @Override
+    public boolean executePayment(User user, Reservation reservation) {
+        // Scannerのインスタンスをメソッド内で生成するように変更
+        Scanner scan = new Scanner(System.in);
         int amount = reservation.getPrice();
         IPayment payment = createPaymentFromUserInput(scan, amount);
         if (payment == null) return false;
@@ -33,6 +35,10 @@ public class PaymentService {
         payment.makeReceipt();
         System.out.println("支払いが完了しました。予約が確定しました！ 金額: " + amount + " 円");
         return true;
+    }
+
+    public void processPayment(IPayment payment) {
+        payment.pay();
     }
 
     public IPayment createPaymentFromUserInput(Scanner scanner, int amount) {

@@ -8,16 +8,16 @@ import account.Manager;
 import account.User;
 import reservation.Reservation;
 import service.IAccountService;
+import service.IPaymentService;
 import service.IReservationService;
 import service.IVehicleManagementService;
-import service.PaymentService;
 
 public class RentalSystem {
 
     private final IAccountService accountService;
     private final IReservationService reservationService;
     private final IVehicleManagementService vehicleManager;
-    private final PaymentService paymentService;
+    private final IPaymentService paymentService; // インターフェース型で宣言
 
     private Account currentAccount;
     private final Scanner scan = new Scanner(System.in);
@@ -25,7 +25,7 @@ public class RentalSystem {
     public RentalSystem(IAccountService accountService,
                         IReservationService reservationService,
                         IVehicleManagementService vehicleManager,
-                        PaymentService paymentService) {
+                        IPaymentService paymentService) { // インターフェース型で受け取る
         this.accountService = accountService;
         this.reservationService = reservationService;
         this.vehicleManager = vehicleManager;
@@ -73,17 +73,29 @@ public class RentalSystem {
             System.out.print("Logout( L ) or Rent( R ) or Return( B ) or History( S ): ");
             String input = scan.nextLine().trim();
             switch (input.toLowerCase()) {
-                case "l" -> { logout(); return; }
-                case "r" -> {
-                    Reservation reservation = reservationService.makeReservation(user, scan);
-                    if (reservation != null) {
-                        boolean paid = paymentService.executePayment(user, reservation, scan);
-                        if (!paid) reservationService.cancelReservation(user, reservation);
-                    }
+                case "l": {
+                    logout();
+                    return;
                 }
-                case "b" -> reservationService.returnVehicle(user, scan);
-                case "s" -> reservationService.showHistory(user);
-                default -> System.out.println("press L, R, B, or S");
+                case "r": {
+                    Reservation reservation = reservationService.makeReservation(user,scan);
+                    if (reservation != null) {
+                        boolean paid = paymentService.executePayment(user, reservation);
+                        if (!paid) {
+                            reservationService.cancelReservation(user, reservation);
+                        }
+                    }
+                    break; 
+                }
+                case "b":
+                    reservationService.returnVehicle(user,scan);
+                    break;
+                case "s":
+                    reservationService.showHistory(user);
+                    break;
+                default:
+                    System.out.println("press L, R, B, or S");
+                    break;
             }
         }
     }
@@ -92,16 +104,28 @@ public class RentalSystem {
         while (true) {
             System.out.println("\nログイン中のマネージャー: " + manager.getID());
             System.out.print("Logout(L) / Register(R) / Change(C) / Remove(D) / Price(P): ");
-            switch (scan.nextLine()) {
-                case "l" -> { logout(); return; }
-                case "r" -> vehicleManager.registerVehicleWithInput(manager, scan);
-                case "c" -> vehicleManager.changeAvailabilityWithInput(manager, scan);
-                case "d" -> vehicleManager.removeVehicleWithInput(manager, scan);
-                case "p" -> vehicleManager.updateRentalPriceWithInput(manager, scan);
-                default -> System.out.println("press L, R, C, D, or P");
+            String input = scan.nextLine().trim();
+            switch (input.toLowerCase()) {
+                case "l": {
+                    logout();
+                    return;
+                }
+                case "r":
+                    vehicleManager.registerVehicleWithInput(manager,scan);
+                    break;
+                case "c":
+                    vehicleManager.changeAvailabilityWithInput(manager,scan);
+                    break;
+                case "d":
+                    vehicleManager.removeVehicleWithInput(manager,scan);
+                    break;
+                case "p":
+                    vehicleManager.updateRentalPriceWithInput(manager,scan);
+                    break;
+                default:
+                    System.out.println("press L, R, C, D, or P");
+                    break;
             }
-
-
         }
     }
 
@@ -113,7 +137,6 @@ public class RentalSystem {
     }
 
     private void handleRegisterAsUser() {
-
         System.out.print("メール: ");
         String email = scan.nextLine();
         System.out.print("パスワード: ");
